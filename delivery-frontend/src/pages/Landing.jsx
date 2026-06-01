@@ -184,7 +184,7 @@ const Landing = () => {
                 Únete a QuillaExpress y llega a más clientes en Quillabamba
               </p>
               <Link
-                to="/register"
+                to="/register?rol=negocio"
                 className="text-sm bg-orange-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-600 transition"
               >
                 Registrar negocio
@@ -199,7 +199,7 @@ const Landing = () => {
                 Trabaja independiente y gana el costo de delivery en Quillabamba
               </p>
               <Link
-                to="/register"
+                to="/register?rol=repartidor"
                 className="text-sm bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 transition"
               >
                 Ser repartidor

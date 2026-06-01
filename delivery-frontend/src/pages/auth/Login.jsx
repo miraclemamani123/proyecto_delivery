@@ -23,10 +23,10 @@ const Login = () => {
       setAuth(user, token)
       toast.success(`¡Bienvenido ${user.name}!`)
 
-      if (user.role === 'admin')          navigate('/admin')
-      else if (user.role === 'negocio')   navigate('/negocio')
-      else if (user.role === 'cliente')   navigate('/cliente')
-      else if (user.role === 'repartidor') navigate('/repartidor')
+      if (user.rol === 'admin')           navigate('/admin')
+      else if (user.rol === 'negocio')    navigate('/negocio')
+      else if (user.rol === 'cliente')    navigate('/cliente')
+      else if (user.rol === 'repartidor') navigate('/repartidor')
 
     } catch (err) {
       toast.error(err.response?.data?.message || 'Credenciales incorrectas')
@@ -41,7 +41,9 @@ const Login = () => {
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-orange-500">🛵 QuillaExpress</h1>
+          <Link to="/" className="inline-block">
+            <h1 className="text-4xl font-bold text-orange-500">🛵 QuillaExpress</h1>
+          </Link>
           <p className="text-gray-500 mt-2">Sistema de delivery en Quillabamba</p>
         </div>
 
@@ -51,8 +53,6 @@ const Login = () => {
           <p className="text-gray-500 text-sm mb-6">Ingresa tus credenciales para continuar</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-
-            {/* Email */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
                 Correo electrónico
@@ -68,7 +68,6 @@ const Login = () => {
               />
             </div>
 
-            {/* Password */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
                 Contraseña
@@ -84,7 +83,6 @@ const Login = () => {
               />
             </div>
 
-            {/* Botón */}
             <button
               type="submit"
               disabled={loading}
@@ -92,10 +90,8 @@ const Login = () => {
             >
               {loading ? 'Ingresando...' : 'Iniciar sesión'}
             </button>
-
           </form>
 
-          {/* Link registro */}
           <p className="text-center text-sm text-gray-500 mt-6">
             ¿No tienes cuenta?{' '}
             <Link to="/register" className="text-orange-500 font-semibold hover:underline">
@@ -104,7 +100,6 @@ const Login = () => {
           </p>
         </div>
 
-        {/* Footer */}
         <p className="text-center text-xs text-gray-400 mt-6">
           Universidad Andina del Cusco — Filial Quillabamba
         </p>
