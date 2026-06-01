@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import api from '../../api/axios'
 import useAuthStore from '../../store/authStore'
 import toast from 'react-hot-toast'
@@ -21,12 +21,12 @@ const Login = () => {
       const res = await api.post('/login', form)
       const { user, token } = res.data
       setAuth(user, token)
-      toast.success(`Bienvenido ${user.name}`)
+      toast.success(`¡Bienvenido ${user.name}!`)
 
-      if (user.role === 'admin')       navigate('/admin')
-      else if (user.role === 'negocio')     navigate('/negocio')
-      else if (user.role === 'cliente')     navigate('/cliente')
-      else if (user.role === 'repartidor')  navigate('/repartidor')
+      if (user.role === 'admin')          navigate('/admin')
+      else if (user.role === 'negocio')   navigate('/negocio')
+      else if (user.role === 'cliente')   navigate('/cliente')
+      else if (user.role === 'repartidor') navigate('/repartidor')
 
     } catch (err) {
       toast.error(err.response?.data?.message || 'Credenciales incorrectas')
@@ -36,103 +36,82 @@ const Login = () => {
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>🛵 QuillaExpress</h1>
-        <p style={styles.subtitle}>Inicia sesión en tu cuenta</p>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
 
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <div style={styles.field}>
-            <label style={styles.label}>Correo electrónico</label>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="correo@ejemplo.com"
-              style={styles.input}
-              required
-            />
-          </div>
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-orange-500">🛵 QuillaExpress</h1>
+          <p className="text-gray-500 mt-2">Sistema de delivery en Quillabamba</p>
+        </div>
 
-          <div style={styles.field}>
-            <label style={styles.label}>Contraseña</label>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              style={styles.input}
-              required
-            />
-          </div>
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-1">Iniciar sesión</h2>
+          <p className="text-gray-500 text-sm mb-6">Ingresa tus credenciales para continuar</p>
 
-          <button type="submit" style={styles.button} disabled={loading}>
-            {loading ? 'Ingresando...' : 'Iniciar sesión'}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-5">
 
-        <p style={styles.link}>
-          ¿No tienes cuenta?{' '}
-          <a href="/register" style={styles.linkText}>Regístrate</a>
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Correo electrónico
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="correo@ejemplo.com"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition"
+              />
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Contraseña
+              </label>
+              <input
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition"
+              />
+            </div>
+
+            {/* Botón */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg transition duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Ingresando...' : 'Iniciar sesión'}
+            </button>
+
+          </form>
+
+          {/* Link registro */}
+          <p className="text-center text-sm text-gray-500 mt-6">
+            ¿No tienes cuenta?{' '}
+            <Link to="/register" className="text-orange-500 font-semibold hover:underline">
+              Regístrate aquí
+            </Link>
+          </p>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-gray-400 mt-6">
+          Universidad Andina del Cusco — Filial Quillabamba
         </p>
+
       </div>
     </div>
   )
-}
-
-const styles = {
-  container: {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f3f4f6',
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    padding: '2.5rem',
-    borderRadius: '12px',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-    width: '100%',
-    maxWidth: '420px',
-  },
-  title: {
-    fontSize: '1.8rem',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#e85d04',
-    marginBottom: '0.25rem',
-  },
-  subtitle: {
-    textAlign: 'center',
-    color: '#6b7280',
-    marginBottom: '1.5rem',
-  },
-  form: { display: 'flex', flexDirection: 'column', gap: '1rem' },
-  field: { display: 'flex', flexDirection: 'column', gap: '0.25rem' },
-  label: { fontSize: '0.875rem', fontWeight: '600', color: '#374151' },
-  input: {
-    padding: '0.75rem 1rem',
-    borderRadius: '8px',
-    border: '1px solid #d1d5db',
-    fontSize: '1rem',
-    outline: 'none',
-  },
-  button: {
-    padding: '0.75rem',
-    backgroundColor: '#e85d04',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '1rem',
-    fontWeight: '600',
-    cursor: 'pointer',
-    marginTop: '0.5rem',
-  },
-  link: { textAlign: 'center', marginTop: '1rem', color: '#6b7280', fontSize: '0.875rem' },
-  linkText: { color: '#e85d04', fontWeight: '600', textDecoration: 'none' },
 }
 
 export default Login
