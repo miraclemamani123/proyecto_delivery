@@ -30,9 +30,29 @@ const ClienteNegocio = () => {
 
   const agregarAlCarrito = (producto) => {
     const carritoActual = JSON.parse(localStorage.getItem('carrito')) || []
-    const existe = carritoActual.find(p => p.id === producto.id)
 
+    // Verificar si hay productos de otro negocio
+    if (carritoActual.length > 0 && carritoActual[0].negocio_id !== negocio.id) {
+      if (window.confirm(`Ya tienes productos de "${carritoActual[0].negocio_nombre}" en tu carrito. ¿Quieres vaciarlo y empezar un nuevo pedido?`)) {
+        localStorage.removeItem('carrito')
+        const nuevoCarrito = [{
+          id: producto.id,
+          nombre: producto.nombre,
+          precio: parseFloat(producto.precio),
+          cantidad: 1,
+          negocio_id: negocio.id,
+          negocio_nombre: negocio.nombre
+        }]
+        localStorage.setItem('carrito', JSON.stringify(nuevoCarrito))
+        setCarrito(nuevoCarrito)
+        toast.success(`${producto.nombre} agregado`)
+      }
+      return
+    }
+
+    const existe = carritoActual.find(p => p.id === producto.id)
     let nuevoCarrito
+
     if (existe) {
       nuevoCarrito = carritoActual.map(p =>
         p.id === producto.id ? { ...p, cantidad: p.cantidad + 1 } : p
