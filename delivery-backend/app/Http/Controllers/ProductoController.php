@@ -21,50 +21,69 @@ class ProductoController extends Controller
     }
 
     // Crear producto
-    public function store(Request $request)
-    {
-        $request->validate([
-            'nombre'               => 'required|string|max:150',
-            'descripcion'          => 'nullable|string',
-            'precio'               => 'required|numeric|min:0',
-            'categoria_producto_id' => 'required|exists:categorias_producto,id',
-        ]);
+public function store(Request $request)
+{
+    $request->validate([
+        'nombre'                => 'required|string|max:150',
+        'descripcion'           => 'nullable|string',
+        'precio'                => 'required|numeric|min:0',
+        'categoria_producto_id' => 'required|exists:categorias_producto,id',
+        'imagen'                => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+    ]);
 
-        $negocio = Negocio::where('usuario_id', $request->user()->id)->firstOrFail();
+    $negocio = Negocio::where('usuario_id', $request->user()->id)->firstOrFail();
 
-        $producto = Producto::create([
-            'negocio_id'           => $negocio->id,
-            'categoria_producto_id' => $request->categoria_producto_id,
-            'nombre'               => $request->nombre,
-            'descripcion'          => $request->descripcion,
-            'precio'               => $request->precio,
-            'disponible'           => true,
-        ]);
-
-        return response()->json([
-            'message'  => 'Producto creado correctamente',
-            'producto' => $producto,
-        ], 201);
+    $imagenUrl = null;
+    if ($request->hasFile('imagen')) {
+        $path = $request->file('imagen')->store('productos', 'public');
+        $imagenUrl = asset('storage/' . $path);
     }
 
-    // Actualizar producto
-    public function update(Request $request, $id)
-    {
-        $negocio = Negocio::where('usuario_id', $request->user()->id)->firstOrFail();
+    $producto = Producto::create([
+        'negocio_id'            => $negocio->id,
+        'categoria_producto_id' => $request->categoria_producto_id,
+        'nombre'                => $request->nombre,
+        'descripcion'           => $request->descripcion,
+        'precio'                => $request->precio,
+        'imagen_url'            => $imagenUrl,
+        'disponible'            => true,
+    ]);
 
-        $producto = Producto::where('id', $id)
-            ->where('negocio_id', $negocio->id)
-            ->firstOrFail();
+    return response()->json([
+        'message'  => 'Producto creado correctamente',
+        'producto' => $producto,
+    ], 201);
+}
 
-        $producto->update($request->only([
-            'nombre', 'descripcion', 'precio', 'categoria_producto_id'
-        ]));
+public function update(Request $request, $id)
+{
+    $negocio = Negocio::where('usuario_id', $request->user()->id)->firstOrFail();
 
-        return response()->json([
-            'message'  => 'Producto actualizado correctamente',
-            'producto' => $producto,
-        ]);
+    $producto = Producto::where('id', $id)
+        ->where('negocio_id', $negocio->id)
+        ->firstOrFail();
+
+    $datos = $request->only(['nombre', 'descripcion', 'precio', 'categoria_producto_id']);
+
+    if ($request->hasFile('imagen')) {
+        // Borrar imagen anterior si existe
+        if ($producto->imagen_url) {
+            // Extraer solo el path relativo desde 'productos/...'
+            $oldPath = parse_url($producto->imagen_url, PHP_URL_PATH);
+            $oldPath = ltrim(str_replace('/storage/', '', $oldPath), '/');
+            \Storage::disk('public')->delete($oldPath);
+        }
+        $path = $request->file('imagen')->store('productos', 'public');
+        $datos['imagen_url'] = asset('storage/' . $path);
     }
+
+    $producto->update($datos);
+
+    return response()->json([
+        'message'  => 'Producto actualizado correctamente',
+        'producto' => $producto,
+    ]);
+}
 
     // Activar o desactivar producto
     public function toggleDisponible(Request $request, $id)

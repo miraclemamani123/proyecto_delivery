@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Notificacion;
 use Illuminate\Http\Request;
 
+
 class NotificacionController extends Controller
 {
     // Ver notificaciones del usuario

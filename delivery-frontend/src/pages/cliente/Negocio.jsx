@@ -31,18 +31,18 @@ const ClienteNegocio = () => {
   const agregarAlCarrito = (producto) => {
     const carritoActual = JSON.parse(localStorage.getItem('carrito')) || []
 
-    // Verificar si hay productos de otro negocio
     if (carritoActual.length > 0 && carritoActual[0].negocio_id !== negocio.id) {
       if (window.confirm(`Ya tienes productos de "${carritoActual[0].negocio_nombre}" en tu carrito. ¿Quieres vaciarlo y empezar un nuevo pedido?`)) {
         localStorage.removeItem('carrito')
-        const nuevoCarrito = [{
-          id: producto.id,
-          nombre: producto.nombre,
-          precio: parseFloat(producto.precio),
-          cantidad: 1,
-          negocio_id: negocio.id,
-          negocio_nombre: negocio.nombre
-        }]
+          const nuevoCarrito = [{
+            id: producto.id,
+            nombre: producto.nombre,
+            precio: parseFloat(producto.precio),
+            imagen_url: producto.imagen_url || null,  // 👈
+            cantidad: 1,
+            negocio_id: negocio.id,
+            negocio_nombre: negocio.nombre
+          }]
         localStorage.setItem('carrito', JSON.stringify(nuevoCarrito))
         setCarrito(nuevoCarrito)
         toast.success(`${producto.nombre} agregado`)
@@ -59,14 +59,15 @@ const ClienteNegocio = () => {
       )
       toast.success(`+1 ${producto.nombre}`)
     } else {
-      nuevoCarrito = [...carritoActual, {
-        id: producto.id,
-        nombre: producto.nombre,
-        precio: parseFloat(producto.precio),
-        cantidad: 1,
-        negocio_id: negocio.id,
-        negocio_nombre: negocio.nombre
-      }]
+        nuevoCarrito = [...carritoActual, {
+          id: producto.id,
+          nombre: producto.nombre,
+          precio: parseFloat(producto.precio),
+          imagen_url: producto.imagen_url || null,  // 👈
+          cantidad: 1,
+          negocio_id: negocio.id,
+          negocio_nombre: negocio.nombre
+        }]
       toast.success(`${producto.nombre} agregado`)
     }
 
@@ -122,8 +123,12 @@ const ClienteNegocio = () => {
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-5xl mx-auto px-4 py-6">
           <div className="flex items-start gap-4">
-            <div className="w-20 h-20 bg-orange-100 rounded-xl flex items-center justify-center text-4xl flex-shrink-0">
-              🍽️
+            {/* ── Imagen del negocio ── */}
+            <div className="w-20 h-20 bg-orange-100 rounded-xl flex items-center justify-center text-4xl flex-shrink-0 overflow-hidden">
+              {negocio.imagen
+                ? <img src={negocio.imagen} alt={negocio.nombre} className="w-full h-full object-cover" />
+                : <span>🍽️</span>
+              }
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -162,8 +167,12 @@ const ClienteNegocio = () => {
                   key={producto.id}
                   className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex gap-4"
                 >
-                  <div className="w-20 h-20 bg-orange-50 rounded-lg flex items-center justify-center text-3xl flex-shrink-0">
-                    🍴
+                  {/* ── Imagen del producto ── */}
+                  <div className="w-20 h-20 bg-orange-50 rounded-lg flex items-center justify-center text-3xl flex-shrink-0 overflow-hidden">
+                    {producto.imagen_url
+                      ? <img src={producto.imagen_url} alt={producto.nombre} className="w-full h-full object-cover" />
+                      : <span>🍴</span>
+                    }
                   </div>
                   <div className="flex-1">
                     <h4 className="font-bold text-gray-800 text-sm">{producto.nombre}</h4>

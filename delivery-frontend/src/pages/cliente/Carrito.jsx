@@ -43,34 +43,51 @@ const ClienteCarrito = () => {
   const negocioNombre = carrito[0]?.negocio_nombre || ''
 
 const handleProcederPago = async () => {
-    if (carrito.length === 0) {
+  if (carrito.length === 0) {
     toast.error('Tu carrito está vacío')
     return
   }
   setLoading(true)
   try {
-    // Obtener ubicación del navegador
+    // 1. Obtener coordenadas del usuario en tiempo real
     const pos = await new Promise((resolve, reject) =>
       navigator.geolocation.getCurrentPosition(resolve, reject)
     )
-
-    // Actualizar ubicación en el backend
+    
+    // 2. Actualizar la ubicación del cliente en la cuenta
     await api.put('/cliente/ubicacion', {
       latitud: pos.coords.latitude,
       longitud: pos.coords.longitude
     })
 
+    // 3. Verificar disponibilidad y costos sin crear el pedido todavía
+    const res = await api.post('/cliente/pedidos/verificar-disponibilidad', {
+      negocio_id: carrito[0].negocio_id
+    })
+
+    // 4. 💡 CORREGIDO: Almacenamos agregando el 'repartidor_id' enviado por la API
+    sessionStorage.setItem('cotizacion_delivery', JSON.stringify({
+      distancia_km: res.data.distancia_km,
+      costo_delivery: res.data.costo_delivery,
+      repartidor_id: res.data.repartidor_id, // 👈 LÍNEA OBLIGATORIA AGREGADA
+      subtotal: total
+    }))
+
+    // 5. Redirigir de forma segura hacia la vista de selección de pago
     navigate('/cliente/pago')
+
   } catch (err) {
     if (err.code === 1) {
       toast.error('Debes permitir el acceso a tu ubicación')
     } else {
-      toast.error(err.response?.data?.message || 'Error al proceder al pago')
+      toast.error(err.response?.data?.message || 'No hay repartidores o el negocio cerró')
     }
   } finally {
     setLoading(false)
   }
 }
+
+
   if (carrito.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -141,9 +158,13 @@ const handleProcederPago = async () => {
                 index < carrito.length - 1 ? 'border-b border-gray-100' : ''
               }`}
             >
-              <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center text-2xl flex-shrink-0">
-                🍴
-              </div>
+
+            <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
+              {producto.imagen_url
+                ? <img src={producto.imagen_url} alt={producto.nombre} className="w-full h-full object-cover rounded-lg" />
+                : <span>🍴</span>
+              }
+            </div>
               <div className="flex-1">
                 <p className="font-semibold text-gray-800 text-sm">{producto.nombre}</p>
                 <p className="text-orange-500 font-bold text-sm">

@@ -15,9 +15,13 @@ class Negocio extends Model
         'nombre',
         'descripcion',
         'direccion',
+        'telefono',       // ← nuevo
         'latitud',
         'longitud',
         'imagen',
+        'qr_yape',        // ← nuevo
+        'qr_plin',        // ← nuevo
+        'qr_tunki',       // ← nuevo
         'estado',
         'aprobado',
         'aprobado_por',

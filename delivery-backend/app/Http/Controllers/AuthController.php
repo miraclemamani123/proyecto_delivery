@@ -20,6 +20,7 @@ class AuthController extends Controller
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
             'rol'      => 'required|in:cliente,negocio,repartidor',
+            'telefono' => 'nullable|string|max:20',
         ]);
 
         $user = User::create([
@@ -31,9 +32,16 @@ class AuthController extends Controller
         ]);
 
         if ($request->rol === 'cliente') {
-            Cliente::create(['usuario_id' => $user->id]);
+            Cliente::create([
+                'usuario_id' => $user->id,
+                'telefono'   => $request->telefono,
+            ]);
         } elseif ($request->rol === 'repartidor') {
-            Repartidor::create(['usuario_id' => $user->id]);
+            Repartidor::create([
+                'usuario_id' => $user->id,
+                'aprobado'   => false,
+                'estado'     => 'inactivo',
+            ]);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -58,6 +66,26 @@ class AuthController extends Controller
             throw ValidationException::withMessages([
                 'email' => ['Las credenciales son incorrectas.'],
             ]);
+        }
+
+        // ✅ Bloquear repartidores no aprobados
+        if ($user->rol === 'repartidor') {
+            $repartidor = Repartidor::where('usuario_id', $user->id)->first();
+            if (!$repartidor || !$repartidor->aprobado) {
+                return response()->json([
+                    'message' => 'Tu cuenta de repartidor está pendiente de aprobación por el administrador.',
+                ], 403);
+            }
+        }
+
+        // ✅ Bloquear negocios no aprobados
+        if ($user->rol === 'negocio') {
+            $negocio = Negocio::where('usuario_id', $user->id)->first();
+            if (!$negocio || !$negocio->aprobado) {
+                return response()->json([
+                    'message' => 'Tu negocio está pendiente de aprobación por el administrador.',
+                ], 403);
+            }
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;

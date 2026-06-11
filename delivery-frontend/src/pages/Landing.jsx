@@ -141,10 +141,13 @@ const Landing = () => {
                 key={negocio.id}
                 className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition overflow-hidden group"
               >
-                {/* Imagen / Emoji */}
-                <div className="h-32 bg-orange-50 flex items-center justify-center text-6xl group-hover:bg-orange-100 transition">
-                  {iconoCategoria(negocio.categoria?.nombre)}
-                </div>
+              {/* Imagen / Emoji */}
+              <div className="h-32 bg-orange-50 flex items-center justify-center text-6xl group-hover:bg-orange-100 transition overflow-hidden">
+                {negocio.imagen
+                  ? <img src={negocio.imagen} alt={negocio.nombre} className="w-full h-full object-cover" />
+                  : <span>{iconoCategoria(negocio.categoria?.nombre)}</span>
+                }
+              </div>
 
                 {/* Info */}
                 <div className="p-4">

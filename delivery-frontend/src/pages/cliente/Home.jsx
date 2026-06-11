@@ -143,9 +143,12 @@ const ClienteHome = () => {
                 className={`bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition overflow-hidden group
                   ${negocio.estado !== 'abierto' ? 'opacity-70' : ''}`}
               >
-                <div className="h-32 bg-orange-50 flex items-center justify-center text-6xl group-hover:bg-orange-100 transition">
-                  {iconoCategoria(negocio.categoria?.nombre)}
-                </div>
+              <div className="h-32 bg-orange-50 flex items-center justify-center text-6xl group-hover:bg-orange-100 transition overflow-hidden">
+                {negocio.imagen
+                  ? <img src={negocio.imagen} alt={negocio.nombre} className="w-full h-full object-cover" />
+                  : iconoCategoria(negocio.categoria?.nombre)
+                }
+              </div>
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <h4 className="font-bold text-gray-800 text-sm leading-tight">
