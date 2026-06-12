@@ -8,6 +8,8 @@ import AdminDashboard from '../pages/admin/Dashboard'
 import AdminNegocios from '../pages/admin/Negocios'
 import AdminRepartidores from '../pages/admin/Repartidores'
 import AdminPedidos from '../pages/admin/Pedidos'
+import AdminAuditoria from '../pages/admin/Auditoria'
+
 
 // 🏪 IMPORTACIÓN DEL NUEVO LAYOUT DEL COMERCIO
 import NegocioLayout from '../pages/negocio/NegocioLayout'
@@ -38,6 +40,8 @@ const AppRouter = () => {
         <Route path="/admin/negocios" element={<ProtectedRoute role="admin"><AdminNegocios /></ProtectedRoute>} />
         <Route path="/admin/repartidores" element={<ProtectedRoute role="admin"><AdminRepartidores /></ProtectedRoute>} />
         <Route path="/admin/pedidos" element={<ProtectedRoute role="admin"><AdminPedidos /></ProtectedRoute>} />
+        <Route path="/admin/auditoria" element={<ProtectedRoute role="admin"><AdminAuditoria /></ProtectedRoute>} />
+
 
         {/* 🏪 RUTAS NEGOCIO AGRUPADAS CON EL ESCUCHADOR GLOBAL DE CAMPANA */}
         <Route element={<ProtectedRoute role="negocio"><NegocioLayout /></ProtectedRoute>}>

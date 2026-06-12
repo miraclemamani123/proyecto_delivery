@@ -12,6 +12,9 @@ const AdminDashboard = () => {
     repartidores: 0, repartidoresPendientes: 0,
     pedidos: 0, pedidosHoy: 0
   })
+  const [tarifa, setTarifa] = useState(null)
+  const [nuevaTarifa, setNuevaTarifa] = useState('')
+  const [guardandoTarifa, setGuardandoTarifa] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -20,10 +23,11 @@ const AdminDashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const [negociosRes, repartidoresRes, pedidosRes] = await Promise.all([
+      const [negociosRes, repartidoresRes, pedidosRes, tarifaRes] = await Promise.all([
         api.get('/admin/negocios'),
         api.get('/admin/repartidores'),
-        api.get('/admin/pedidos')
+        api.get('/admin/pedidos'),
+        api.get('/admin/tarifa')
       ])
 
       const hoy = new Date().toDateString()
@@ -38,10 +42,30 @@ const AdminDashboard = () => {
           new Date(p.created_at).toDateString() === hoy
         ).length
       })
+
+      setTarifa(tarifaRes.data)
+      setNuevaTarifa(tarifaRes.data?.precio_por_km || '')
     } catch (err) {
       toast.error('Error al cargar estadísticas')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleGuardarTarifa = async () => {
+    if (!nuevaTarifa || isNaN(nuevaTarifa) || nuevaTarifa <= 0) {
+      toast.error('Ingresa un precio válido')
+      return
+    }
+    setGuardandoTarifa(true)
+    try {
+      const res = await api.put('/admin/tarifa', { precio_por_km: nuevaTarifa })
+      setTarifa(res.data.tarifa)
+      toast.success('Tarifa actualizada correctamente')
+    } catch (err) {
+      toast.error('Error al actualizar tarifa')
+    } finally {
+      setGuardandoTarifa(false)
     }
   }
 
@@ -107,40 +131,95 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* ACCIONES */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Link
-            to="/admin/negocios"
-            className="bg-white hover:shadow-md border border-gray-100 rounded-xl p-5 flex items-center gap-4 transition"
-          >
-            <span className="text-4xl">🏪</span>
-            <div>
-              <p className="font-bold text-gray-800">Negocios</p>
-              <p className="text-gray-500 text-sm">Aprobar y gestionar</p>
-            </div>
-          </Link>
+          {/* ACCIONES */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <Link
+              to="/admin/negocios"
+              className="bg-white hover:shadow-md border border-gray-100 rounded-xl p-5 flex items-center gap-4 transition"
+            >
+              <span className="text-4xl">🏪</span>
+              <div>
+                <p className="font-bold text-gray-800">Negocios</p>
+                <p className="text-gray-500 text-sm">Aprobar y gestionar</p>
+              </div>
+            </Link>
 
-          <Link
-            to="/admin/repartidores"
-            className="bg-white hover:shadow-md border border-gray-100 rounded-xl p-5 flex items-center gap-4 transition"
-          >
-            <span className="text-4xl">🛵</span>
-            <div>
-              <p className="font-bold text-gray-800">Repartidores</p>
-              <p className="text-gray-500 text-sm">Aprobar y gestionar</p>
-            </div>
-          </Link>
+            <Link
+              to="/admin/repartidores"
+              className="bg-white hover:shadow-md border border-gray-100 rounded-xl p-5 flex items-center gap-4 transition"
+            >
+              <span className="text-4xl">🛵</span>
+              <div>
+                <p className="font-bold text-gray-800">Repartidores</p>
+                <p className="text-gray-500 text-sm">Aprobar y gestionar</p>
+              </div>
+            </Link>
 
-          <Link
-            to="/admin/pedidos"
-            className="bg-white hover:shadow-md border border-gray-100 rounded-xl p-5 flex items-center gap-4 transition"
-          >
-            <span className="text-4xl">📋</span>
+            <Link
+              to="/admin/pedidos"
+              className="bg-white hover:shadow-md border border-gray-100 rounded-xl p-5 flex items-center gap-4 transition"
+            >
+              <span className="text-4xl">📋</span>
+              <div>
+                <p className="font-bold text-gray-800">Pedidos</p>
+                <p className="text-gray-500 text-sm">Monitorear todos</p>
+              </div>
+            </Link>
+
+            <Link
+              to="/admin/auditoria"
+              className="bg-white hover:shadow-md border border-gray-100 rounded-xl p-5 flex items-center gap-4 transition"
+            >
+              <span className="text-4xl">🔍</span>
+              <div>
+                <p className="font-bold text-gray-800">Auditoría</p>
+                <p className="text-gray-500 text-sm">Registro de acciones</p>
+              </div>
+            </Link>
+          </div>
+
+        {/* TARIFA DE DELIVERY */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="font-bold text-gray-800">Pedidos</p>
-              <p className="text-gray-500 text-sm">Monitorear todos</p>
+              <h3 className="font-bold text-gray-800 text-base">Tarifa de delivery</h3>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Precio por kilómetro para calcular el costo de entrega
+              </p>
             </div>
-          </Link>
+            <span className="text-2xl">💰</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
+              <span className="text-gray-500 font-semibold text-sm">S/</span>
+              <input
+                type="number"
+                value={nuevaTarifa}
+                onChange={e => setNuevaTarifa(e.target.value)}
+                step="0.10"
+                min="0.1"
+                placeholder="0.00"
+                className="flex-1 bg-transparent outline-none text-gray-800 font-bold text-sm"
+              />
+              <span className="text-gray-400 text-xs">por km</span>
+            </div>
+            <button
+              onClick={handleGuardarTarifa}
+              disabled={guardandoTarifa}
+              className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-5 py-3 rounded-lg transition disabled:opacity-50 text-sm"
+            >
+              {guardandoTarifa ? 'Guardando...' : 'Guardar'}
+            </button>
+          </div>
+
+          {tarifa && (
+            <p className="text-xs text-gray-400 mt-2">
+              Tarifa actual: <span className="font-semibold text-gray-600">
+                S/{parseFloat(tarifa.precio_por_km).toFixed(2)} / km
+              </span>
+            </p>
+          )}
         </div>
 
       </div>

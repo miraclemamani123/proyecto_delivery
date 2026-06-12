@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
@@ -7,6 +6,7 @@ import MapaEntrega, { obtenerRutaOSRM } from '../../components/shared/MapaEntreg
 
 const INICIO_DEMO = { lat: -12.8563, lng: -72.6926 }
 const VELOCIDAD_MS = 400
+const ITEMS_POR_PAGINA = 5
 
 const calcularMetros = (p1, p2) => {
   const R = 6371000
@@ -33,7 +33,7 @@ const useSimulacion = (pedidos) => {
 
   const iniciar = async (pedido) => {
     const id    = pedido.id
-    const esNeg = ['aceptado', 'en_preparacion'].includes(pedido.estado)
+    const esNeg = ['aceptado', 'en_preparacion', 'listo'].includes(pedido.estado)
 
     const latDest = parseFloat(esNeg
       ? (pedido.distancia?.latitud_negocio  || pedido.negocio?.latitud)
@@ -88,7 +88,7 @@ const useSimulacion = (pedidos) => {
 
   useEffect(() => {
     const activos = pedidos.filter(p =>
-      ['aceptado', 'en_preparacion','listo', 'en_camino'].includes(p.estado)
+      ['aceptado', 'en_preparacion', 'listo', 'en_camino'].includes(p.estado)
     )
     Object.keys(animRef.current).forEach(id => {
       if (!activos.find(p => String(p.id) === id)) detener(id)
@@ -105,7 +105,7 @@ const estadoColor = (estado) => {
     case 'pendiente':      return 'bg-yellow-100 text-yellow-700'
     case 'aceptado':       return 'bg-blue-100 text-blue-700'
     case 'en_preparacion': return 'bg-purple-100 text-purple-700'
-    case 'listo':        return 'bg-teal-100 text-teal-700'
+    case 'listo':          return 'bg-teal-100 text-teal-700'
     case 'en_camino':      return 'bg-orange-100 text-orange-700'
     case 'entregado':      return 'bg-green-100 text-green-700'
     case 'rechazado':      return 'bg-red-100 text-red-700'
@@ -118,7 +118,7 @@ const estadoLabel = (estado) => {
     case 'pendiente':      return '⏳ Pendiente'
     case 'aceptado':       return '✅ Aceptado'
     case 'en_preparacion': return '👨‍🍳 En preparación'
-    case 'listo':        return '📦 Listo para recoger'
+    case 'listo':          return '📦 Listo para recoger'
     case 'en_camino':      return '🛵 En camino'
     case 'entregado':      return '🎉 Entregado'
     case 'rechazado':      return '❌ Rechazado'
@@ -155,6 +155,9 @@ const PedidoCard = ({ pedido, cambiarEstado, posSimulada }) => {
 
       <div className="bg-gray-50 rounded-lg p-3 mb-3 space-y-1 text-sm">
         <p className="text-gray-600">👤 Cliente: <strong>{pedido.cliente?.usuario?.name} {pedido.cliente?.usuario?.apellido}</strong></p>
+        {pedido.cliente?.telefono && (
+          <p className="text-gray-600">📞 Teléfono: <strong>{pedido.cliente?.telefono}</strong></p>
+        )}
         <p className="text-gray-600">🏪 Recoger en: <strong>{pedido.negocio?.direccion}</strong></p>
         <p className="text-gray-600">📏 Distancia: <strong>{pedido.distancia_km} km</strong></p>
         <p className="text-green-600 font-semibold">💵 Cobrar en efectivo: S/{parseFloat(pedido.costo_delivery).toFixed(2)}</p>
@@ -180,28 +183,28 @@ const PedidoCard = ({ pedido, cambiarEstado, posSimulada }) => {
         </div>
       )}
 
-        {pedido.estado === 'en_preparacion' && (
-          <div className="space-y-3">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">📍 Ve al negocio</p>
-            <MapaEntrega negocio={pedido.negocio} cliente={pedido.cliente} repartidor={pedido.repartidor}
-              distancia={pedido.distancia} modo="ir_a_negocio" posSimulada={posSimulada} />
-            <div className="bg-purple-50 rounded-lg p-3 text-sm text-purple-700 text-center font-semibold">
-              👨‍🍳 El negocio está preparando el pedido — espera la señal
-            </div>
+      {pedido.estado === 'en_preparacion' && (
+        <div className="space-y-3">
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">📍 Ve al negocio</p>
+          <MapaEntrega negocio={pedido.negocio} cliente={pedido.cliente} repartidor={pedido.repartidor}
+            distancia={pedido.distancia} modo="ir_a_negocio" posSimulada={posSimulada} />
+          <div className="bg-purple-50 rounded-lg p-3 text-sm text-purple-700 text-center font-semibold">
+            👨‍🍳 El negocio está preparando el pedido — espera la señal
           </div>
-        )}
+        </div>
+      )}
 
-        {pedido.estado === 'listo' && (
-          <div className="space-y-3">
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">📍 ¡Pedido listo! Ve a recogerlo</p>
-            <MapaEntrega negocio={pedido.negocio} cliente={pedido.cliente} repartidor={pedido.repartidor}
-              distancia={pedido.distancia} modo="ir_a_negocio" posSimulada={posSimulada} />
-            <button onClick={() => cambiarEstado(pedido.id, 'en_camino')}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg transition text-sm">
-              🛵 Recoger pedido — salir a entregar
-            </button>
-          </div>
-        )}
+      {pedido.estado === 'listo' && (
+        <div className="space-y-3">
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">📍 ¡Pedido listo! Ve a recogerlo</p>
+          <MapaEntrega negocio={pedido.negocio} cliente={pedido.cliente} repartidor={pedido.repartidor}
+            distancia={pedido.distancia} modo="ir_a_negocio" posSimulada={posSimulada} />
+          <button onClick={() => cambiarEstado(pedido.id, 'en_camino')}
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg transition text-sm">
+            🛵 Recoger pedido — salir a entregar
+          </button>
+        </div>
+      )}
 
       {pedido.estado === 'en_camino' && (
         <div className="space-y-3">
@@ -239,10 +242,11 @@ const PedidoCard = ({ pedido, cambiarEstado, posSimulada }) => {
 
 const RepartidorPedidos = () => {
   const navigate = useNavigate()
-  const [pedidos, setPedidos] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [pestaña, setPestaña] = useState('pedidos')
-  const intervaloPedidosRef   = useRef(null)
+  const [pedidos, setPedidos]   = useState([])
+  const [loading, setLoading]   = useState(true)
+  const [pestaña, setPestaña]   = useState('pedidos')
+  const [paginaHistorial, setPaginaHistorial] = useState(1)
+  const intervaloPedidosRef     = useRef(null)
 
   const posicionesSimuladas = useSimulacion(pedidos)
 
@@ -256,6 +260,10 @@ const RepartidorPedidos = () => {
       intervaloPedidosRef.current = null
     }
   }, [])
+
+  useEffect(() => {
+    setPaginaHistorial(1)
+  }, [pestaña])
 
   const fetchPedidos = async () => {
     try {
@@ -278,9 +286,14 @@ const RepartidorPedidos = () => {
     }
   }
 
-  // Pestaña pedidos: todo excepto entregado y rechazado
   const pedidosActuales  = pedidos.filter(p => !['entregado', 'rechazado'].includes(p.estado))
   const pedidosHistorial = pedidos.filter(p => ['entregado', 'rechazado'].includes(p.estado))
+
+  const totalPaginas      = Math.ceil(pedidosHistorial.length / ITEMS_POR_PAGINA)
+  const historialPaginado = pedidosHistorial.slice(
+    (paginaHistorial - 1) * ITEMS_POR_PAGINA,
+    paginaHistorial * ITEMS_POR_PAGINA
+  )
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -295,16 +308,11 @@ const RepartidorPedidos = () => {
           </button>
         </div>
 
-        {/* Pestañas */}
         <div className="max-w-3xl mx-auto px-4 flex border-t border-gray-100">
-          <button
-            onClick={() => setPestaña('pedidos')}
+          <button onClick={() => setPestaña('pedidos')}
             className={`flex-1 py-3 text-sm font-bold transition border-b-2 ${
-              pestaña === 'pedidos'
-                ? 'border-orange-500 text-orange-500'
-                : 'border-transparent text-gray-400 hover:text-gray-600'
-            }`}
-          >
+              pestaña === 'pedidos' ? 'border-orange-500 text-orange-500' : 'border-transparent text-gray-400 hover:text-gray-600'
+            }`}>
             🛵 Pedidos
             {pedidosActuales.length > 0 && (
               <span className="ml-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
@@ -312,14 +320,10 @@ const RepartidorPedidos = () => {
               </span>
             )}
           </button>
-          <button
-            onClick={() => setPestaña('historial')}
+          <button onClick={() => setPestaña('historial')}
             className={`flex-1 py-3 text-sm font-bold transition border-b-2 ${
-              pestaña === 'historial'
-                ? 'border-orange-500 text-orange-500'
-                : 'border-transparent text-gray-400 hover:text-gray-600'
-            }`}
-          >
+              pestaña === 'historial' ? 'border-orange-500 text-orange-500' : 'border-transparent text-gray-400 hover:text-gray-600'
+            }`}>
             🗂️ Historial
             {pedidosHistorial.length > 0 && (
               <span className="ml-2 bg-gray-400 text-white text-xs px-2 py-0.5 rounded-full">
@@ -362,10 +366,47 @@ const RepartidorPedidos = () => {
                     <p className="font-semibold">No hay historial aún</p>
                   </div>
                 ) : (
-                  pedidosHistorial.map(p => (
-                    <PedidoCard key={p.id} pedido={p} cambiarEstado={cambiarEstado}
-                      posSimulada={posicionesSimuladas[p.id]} />
-                  ))
+                  <>
+                    <p className="text-xs text-gray-400 text-right">
+                      Mostrando {(paginaHistorial - 1) * ITEMS_POR_PAGINA + 1}–{Math.min(paginaHistorial * ITEMS_POR_PAGINA, pedidosHistorial.length)} de {pedidosHistorial.length} pedidos
+                    </p>
+
+                    {historialPaginado.map(p => (
+                      <PedidoCard key={p.id} pedido={p} cambiarEstado={cambiarEstado}
+                        posSimulada={posicionesSimuladas[p.id]} />
+                    ))}
+
+                    {totalPaginas > 1 && (
+                      <div className="flex items-center justify-center gap-2 pt-4">
+                        <button
+                          onClick={() => setPaginaHistorial(p => Math.max(1, p - 1))}
+                          disabled={paginaHistorial === 1}
+                          className="px-4 py-2 text-sm font-semibold rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                        >
+                          ← Anterior
+                        </button>
+
+                        {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(n => (
+                          <button key={n} onClick={() => setPaginaHistorial(n)}
+                            className={`w-9 h-9 text-sm font-bold rounded-lg transition ${
+                              paginaHistorial === n
+                                ? 'bg-orange-500 text-white border border-orange-500'
+                                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                            }`}>
+                            {n}
+                          </button>
+                        ))}
+
+                        <button
+                          onClick={() => setPaginaHistorial(p => Math.min(totalPaginas, p + 1))}
+                          disabled={paginaHistorial === totalPaginas}
+                          className="px-4 py-2 text-sm font-semibold rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                        >
+                          Siguiente →
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}

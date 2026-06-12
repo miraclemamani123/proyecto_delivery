@@ -83,6 +83,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/repartidores/{id}/aprobar',    [AdminController::class, 'aprobarRepartidor']);
         Route::patch('/repartidores/{id}/desactivar', [AdminController::class, 'desactivarRepartidor']);
         Route::get('/pedidos',                        [AdminController::class, 'pedidos']);
+        Route::get('/tarifa',  [AdminController::class, 'tarifa']);
+        Route::put('/tarifa',  [AdminController::class, 'actualizarTarifa']);
+        Route::get('/auditoria', [AdminController::class, 'auditoria']);
+
     });
 });
 

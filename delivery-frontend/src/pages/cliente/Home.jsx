@@ -10,6 +10,7 @@ const ClienteHome = () => {
   const [negocios, setNegocios] = useState([])
   const [loading, setLoading] = useState(true)
   const [categoriaActiva, setCategoriaActiva] = useState('Todos')
+  const [busqueda, setBusqueda] = useState('')
 
   useEffect(() => {
     fetchNegocios()
@@ -27,18 +28,24 @@ const ClienteHome = () => {
   }
 
   const handleLogout = async () => {
-    try {
-      await api.post('/logout')
-    } catch (err) {}
+    try { await api.post('/logout') } catch (err) {}
     logout()
     navigate('/')
   }
 
   const categorias = ['Todos', ...new Set(negocios.map(n => n.categoria?.nombre).filter(Boolean))]
 
-  const negociosFiltrados = categoriaActiva === 'Todos'
-    ? negocios
-    : negocios.filter(n => n.categoria?.nombre === categoriaActiva)
+  const negociosFiltrados = negocios
+    .filter(n => categoriaActiva === 'Todos' || n.categoria?.nombre === categoriaActiva)
+    .filter(n => {
+      if (!busqueda) return true
+      const texto = busqueda.toLowerCase()
+      return (
+        n.nombre?.toLowerCase().includes(texto) ||
+        n.direccion?.toLowerCase().includes(texto) ||
+        n.categoria?.nombre?.toLowerCase().includes(texto)
+      )
+    })
 
   const iconoCategoria = (nombre) => {
     const n = nombre?.toLowerCase()
@@ -62,10 +69,7 @@ const ClienteHome = () => {
             <span className="text-sm text-gray-600">
               Hola, <strong>{user?.name}</strong>
             </span>
-            <Link
-              to="/cliente/pedidos"
-              className="text-sm text-orange-500 font-semibold hover:underline"
-            >
+            <Link to="/cliente/pedidos" className="text-sm text-orange-500 font-semibold hover:underline">
               Mis pedidos
             </Link>
             <button
@@ -81,16 +85,14 @@ const ClienteHome = () => {
       {/* HERO */}
       <section className="bg-gradient-to-br from-orange-500 to-orange-600 text-white py-12 px-4">
         <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-2">
-            ¿Qué quieres pedir hoy?
-          </h2>
-          <p className="text-orange-100 mb-6">
-            Paga con Yape o Plin — Delivery en Quillabamba
-          </p>
+          <h2 className="text-3xl font-bold mb-2">¿Qué quieres pedir hoy?</h2>
+          <p className="text-orange-100 mb-6">Paga con Yape o Plin — Delivery en Quillabamba</p>
           <div className="max-w-xl mx-auto relative">
             <input
               type="text"
               placeholder="Buscar negocios o productos..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
               className="w-full px-6 py-4 rounded-xl text-gray-800 text-lg shadow-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
             />
             <span className="absolute right-4 top-4 text-2xl">🔍</span>
@@ -121,7 +123,10 @@ const ClienteHome = () => {
       {/* NEGOCIOS */}
       <section className="max-w-6xl mx-auto px-4 pb-10">
         <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">
-          Negocios disponibles
+          {busqueda
+            ? `Resultados para "${busqueda}" (${negociosFiltrados.length})`
+            : 'Negocios disponibles'
+          }
         </h3>
 
         {loading ? (
@@ -132,7 +137,15 @@ const ClienteHome = () => {
         ) : negociosFiltrados.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
             <div className="text-5xl mb-4">🏪</div>
-            <p>No hay negocios disponibles</p>
+            <p>No se encontraron negocios</p>
+            {busqueda && (
+              <button
+                onClick={() => setBusqueda('')}
+                className="mt-3 text-sm text-orange-500 font-semibold hover:underline"
+              >
+                Limpiar búsqueda
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -143,17 +156,15 @@ const ClienteHome = () => {
                 className={`bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition overflow-hidden group
                   ${negocio.estado !== 'abierto' ? 'opacity-70' : ''}`}
               >
-              <div className="h-32 bg-orange-50 flex items-center justify-center text-6xl group-hover:bg-orange-100 transition overflow-hidden">
-                {negocio.imagen
-                  ? <img src={negocio.imagen} alt={negocio.nombre} className="w-full h-full object-cover" />
-                  : iconoCategoria(negocio.categoria?.nombre)
-                }
-              </div>
+                <div className="h-32 bg-orange-50 flex items-center justify-center text-6xl group-hover:bg-orange-100 transition overflow-hidden">
+                  {negocio.imagen
+                    ? <img src={negocio.imagen} alt={negocio.nombre} className="w-full h-full object-cover" />
+                    : iconoCategoria(negocio.categoria?.nombre)
+                  }
+                </div>
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <h4 className="font-bold text-gray-800 text-sm leading-tight">
-                      {negocio.nombre}
-                    </h4>
+                    <h4 className="font-bold text-gray-800 text-sm leading-tight">{negocio.nombre}</h4>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-semibold whitespace-nowrap ${
                       negocio.estado === 'abierto'
                         ? 'bg-green-100 text-green-600'
@@ -162,9 +173,7 @@ const ClienteHome = () => {
                       {negocio.estado === 'abierto' ? '● Abierto' : '● Cerrado'}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 mb-1 line-clamp-1">
-                    📍 {negocio.direccion}
-                  </p>
+                  <p className="text-xs text-gray-500 mb-1 line-clamp-1">📍 {negocio.direccion}</p>
                   <p className="text-xs text-orange-400 font-semibold capitalize">
                     {negocio.categoria?.nombre || 'Negocio'}
                   </p>
@@ -177,7 +186,6 @@ const ClienteHome = () => {
           </div>
         )}
       </section>
-
     </div>
   )
 }
